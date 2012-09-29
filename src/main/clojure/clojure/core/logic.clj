@@ -1848,21 +1848,38 @@
 ;; =============================================================================
 ;; Syntax
 
-(extend-type clojure.lang.PersistentVector
+(deftype logic-monad [v mv goal]
+  clojure.lang.IDeref
+  (deref [mv]
+    (mv identity))
+
+  clojure.lang.IFn
+  (invoke [_ c]
+    (cond
+     goal (mv (fn [v] ((goal v) c)))
+     (= ::logic-zero v) nil
+     :else (c v)))
+
   m/Monad
   (do-result [_ v]
-    [v])
-  (bind [mv f]
-    (vec (mapcat f (remove nil? mv))))
+    (logic-monad. v nil nil))
+  (bind [mv goal]
+    (logic-monad. nil mv goal))
 
   m/MonadZero
   (zero [_]
-    [])
+    (logic-monad. ::logic-zero nil nil))
   (plus-step [mv mvs]
-    (vec (apply concat mv mvs))))
+    (logic-monad. nil
+                  (fn [f]
+                    (f nil))
+                  (fn [_]
+                    (fn [c]
+                      (doseq [f (cons mv mvs)]
+                        (f c)))))))
 
 (defn logic-m [v]
-  (vector v))
+  (logic-monad. v nil nil))
 
 (defn succeed
   "A goal that always succeeds."
@@ -1955,9 +1972,14 @@
 
 (defmacro run* [[x] & goals]
   `(let [~x (lvar '~x)
-         xs# ((all ~@goals) empty-s)]
+         xs# (atom [])
+         leaf# (fn [s#]
+                 (swap! xs# conj s#))
+         solver# ((all ~@goals) empty-s)]
+     (solver# leaf#)
      (doall
       (->> xs#
+           (deref)
            (map #(-reify % ~x))))))
 
 (defmacro run-nc
