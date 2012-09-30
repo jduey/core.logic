@@ -1849,6 +1849,9 @@
 ;; =============================================================================
 ;; Syntax
 
+(def tasks (atom []))
+(def thread-pool (fj/fjpool))
+
 (deftype logic-monad [v mv goal]
   clojure.lang.IFn
   (invoke [_ c]
@@ -1872,8 +1875,9 @@
                     (f nil))
                   (fn [_]
                     (fn [c]
-                      (doseq [f (cons mv mvs)]
-                        (f c)))))))
+                      (doseq [t (map #(fj/fork (fj/task (% c))) mvs)]
+                        (swap! tasks conj t))
+                      (mv c))))))
 
 (defn logic-m [v]
   (logic-monad. v nil nil))
@@ -1972,12 +1976,22 @@
          xs# (atom [])
          leaf# (fn [s#]
                  (swap! xs# conj s#))
-         solver# ((all ~@goals) empty-s)]
-     (solver# leaf#)
-     (doall
-      (->> xs#
-           (deref)
-           (map #(-reify % ~x))))))
+         solver# ((all ~@goals) empty-s)
+         task# (fj/task (solver# leaf#))]
+     (fj/invoke thread-pool task#)
+
+     ;; wait for all tasks to finish
+     (loop [ts# @tasks]
+       (when (seq ts#)
+         (doseq [t# ts#]
+           (fj/join t#)
+           (swap! tasks subvec 1))
+         (recur @tasks)))
+
+     ;; fetch the results
+     (->> xs#
+          (deref)
+          (map #(-reify % ~x)))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 

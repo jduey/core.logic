@@ -460,12 +460,12 @@
 ;; conde
 
 (deftest test-basic-conde
-  (is (=  (run* [x]
-            (conde
-              [(== x 'olive) succeed]
-              [succeed succeed]
-              [(== x 'oil) succeed]))
-          '[olive _.0 oil])))
+  (is (=  (set (run* [x]
+                     (conde
+                      [(== x 'olive) succeed]
+                      [succeed succeed]
+                      [(== x 'oil) succeed])))
+          (hash-set 'olive '_.0 'oil))))
 
 (deftest test-basic-conde-2
   (is (= (run* [r]
