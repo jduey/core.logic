@@ -3,6 +3,7 @@
   (:use [clojure.walk :only [postwalk]])
   (:require [clojure.set :as set]
             [clojure.string :as string]
+            [clojure.core.logic.forkjoin :as fj]
             [monads.core :as m])
   (:import [java.io Writer]))
 
@@ -1849,10 +1850,6 @@
 ;; Syntax
 
 (deftype logic-monad [v mv goal]
-  clojure.lang.IDeref
-  (deref [mv]
-    (mv identity))
-
   clojure.lang.IFn
   (invoke [_ c]
     (cond
