@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [==])
   (:use [clojure.walk :only [postwalk]])
   (:require [clojure.set :as set]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [monads.core :as m])
   (:import [java.io Writer]))
 
 (def ^{:dynamic true} *occurs-check* true)
@@ -74,7 +75,7 @@
 ;; -----------------------------------------------------------------------------
 ;; Goal protocols
 
-(defprotocol IBind
+#_(defprotocol IBind
   (bind [this g]))
 
 (defprotocol IMPlus
@@ -1097,7 +1098,9 @@
        (ext this x v)
        (ext-no-check this x v))))
 
-  IBind
+  m/Monad
+  (do-result [_ v]
+    :bogus)
   (bind [this g]
     (g this))
   IMPlus
@@ -1763,9 +1766,9 @@
        (composeg* ~@gs))))
 
 (defmacro bind*
-  ([a g] `(bind ~a ~g))
+  ([a g] `(m/bind ~a ~g))
   ([a g & g-rest]
-     `(bind* (bind ~a ~g) ~@g-rest)))
+     `(bind* (m/bind ~a ~g) ~@g-rest)))
 
 (defmacro mplus*
   ([e] e)
@@ -1789,9 +1792,11 @@
     (case k
       :a a
       not-found))
-  IBind
+  m/Monad
+  (do-result [_ v]
+    nil)
   (bind [this g]
-    (mplus (g a) (-inc (bind f g))))
+    (mplus (g a) (-inc (m/bind f g))))
   IMPlus
   (mplus [this fp]
     (Choice. a (fn [] (mplus (fp) f))))
@@ -1805,8 +1810,9 @@
 ;; -----------------------------------------------------------------------------
 ;; MZero
 
-(extend-protocol IBind
+(extend-protocol m/Monad
   nil
+  (do-result [_ v] nil)
   (bind [_ g] nil))
 
 (extend-protocol IMPlus
@@ -1829,9 +1835,10 @@
 ;; Inc
 
 (extend-type clojure.lang.Fn
-  IBind
+  m/Monad
+  (do-result [_ v] nil)
   (bind [this g]
-    (-inc (bind (this) g)))
+    (-inc (m/bind (this) g)))
   IMPlus
   (mplus [this f]
     (-inc (mplus (f) this)))
@@ -1841,13 +1848,29 @@
 ;; =============================================================================
 ;; Syntax
 
+(extend-type clojure.lang.PersistentVector
+  m/Monad
+  (do-result [_ v]
+    [v])
+  (bind [mv f]
+    (vec (mapcat f (remove nil? mv))))
+
+  m/MonadZero
+  (zero [_]
+    [])
+  (plus-step [mv mvs]
+    (vec (apply concat mv mvs))))
+
+(defn logic-m [v]
+  (vector v))
+
 (defn succeed
   "A goal that always succeeds."
-  [a] a)
+  [a] (logic-m a))
 
 (defn fail
   "A goal that always fails."
-  [a] nil)
+  [a] (m/zero (logic-m nil)))
 
 (def s# succeed)
 
@@ -1875,27 +1898,17 @@
   "A goal that attempts to unify terms u and v."
   [u v]
   (fn [a]
-    (when-let [ap (unify a u v)]
-      (if (pos? (count (:cs a)))
-        ((update-prefix a ap) a)
-        ap))))
+    (if-let [ap (unify a u v)]
+      (succeed ap)
+      (fail nil))))
 
-(defn- bind-conde-clause [a]
-  (fn [g-rest]
-    `(bind* ~a ~@g-rest)))
-
-(defn- bind-conde-clauses [a clauses]
-  (map (bind-conde-clause a) clauses))
-
-(defmacro conde
+(defn conde
   "Logical disjunction of the clauses. The first goal in
   a clause is considered the head of that clause. Interleaves the
   execution of the clauses."
   [& clauses]
-  (let [a (gensym "a")]
-    `(fn [~a]
-       (-inc
-        (mplus* ~@(bind-conde-clauses a clauses))))))
+  (fn [s]
+    (m/plus (map #((m/chain %) s) clauses))))
 
 (defn- lvar-bind [sym]
   ((juxt identity
@@ -1904,14 +1917,17 @@
 (defn- lvar-binds [syms]
   (mapcat lvar-bind syms))
 
+(defn all
+  ([] succeed)
+  ([& goals]
+     (m/chain goals)))
+
 (defmacro fresh
-  "Creates fresh variables. Goals occuring within form a logical 
+  "Creates fresh variables. Goals occuring within form a logical
   conjunction."
   [[& lvars] & goals]
-  `(fn [a#]
-     (-inc
-      (let [~@(lvar-binds lvars)]
-        (bind* a# ~@goals)))))
+  `(let [~@(lvar-binds lvars)]
+     (monads.core/chain (list ~@goals))))
 
 (declare reifyg)
 
@@ -1932,10 +1948,17 @@
   [n & goals]
   `(doall (solve ~n ~@goals)))
 
-(defmacro run*
+#_(defmacro run*
   "Executes goals until results are exhausted."
   [& goals]
   `(run false ~@goals))
+
+(defmacro run* [[x] & goals]
+  `(let [~x (lvar '~x)
+         xs# ((all ~@goals) empty-s)]
+     (doall
+      (->> xs#
+           (map #(-reify % ~x))))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 
@@ -1959,7 +1982,7 @@
   [& goals]
   `(solve false ~@goals))
 
-(defmacro all
+#_(defmacro all
   "Like fresh but does does not create logic variables."
   ([] `clojure.core.logic/s#)
   ([& goals] `(fn [a#] (bind* a# ~@goals))))
@@ -2181,7 +2204,7 @@
 
   Choice
   (ifa [b gs c]
-    (reduce bind b gs)))
+    (reduce m/bind b gs)))
 
 (extend-protocol IIfU
   nil
@@ -2204,7 +2227,7 @@
   ;; TODO: Choice always holds a as a list, can we just remove that?
   Choice
   (ifu [b gs c]
-    (reduce bind (:a b) gs)))
+    (reduce m/bind (:a b) gs)))
 
 (defn- cond-clauses [a]
   (fn [goals]
@@ -2841,17 +2864,18 @@
 ;; Waiting Stream
 
 (extend-type clojure.lang.IPersistentVector
-  IBind
+  m/Monad
+  (do-result [_ v] nil)
   (bind [this g]
     (waiting-stream-check this
       ;; success continuation
-      (fn [f] (bind f g))
+      (fn [f] (m/bind f g))
       ;; failure continuation
       (fn []
         (into []
           (map (fn [ss]
                  (make-suspended-stream (:cache ss) (.ansv* ss)
-                   (fn [] (bind ((:f ss)) g))))
+                   (fn [] (m/bind ((:f ss)) g))))
                this)))))
 
   IMPlus

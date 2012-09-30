@@ -445,7 +445,7 @@
        (resto l d)
        (listo d))]))
 
-(defn flatteno [s out]
+#_(defn flatteno [s out]
   (conde
     [(emptyo s) (== '() out)]
     [(pairo s)
@@ -482,13 +482,13 @@
     [(== 'cup x) s#]))
 
 (deftest test-basic-conde-e-3
-  (is (= (run* [r]
-           (fresh [x y]
-             (conde
-               [(teacupo x) (== true y) s#]
-               [(== false x) (== true y)])
-             (== (cons x (cons y ())) r)))
-         '((false true) (tea true) (cup true)))))
+  (is (= (set (run* [r]
+                    (fresh [x y]
+                           (conde
+                            [(teacupo x) (== true y) s#]
+                            [(== false x) (== true y)])
+                           (== (cons x (cons y ())) r))))
+         (set '((false true) (tea true) (cup true))))))
 
 ;; =============================================================================
 ;; conso
@@ -566,18 +566,18 @@
 ;; =============================================================================
 ;; flatteno
 
-(deftest test-flatteno
-  (is (= (run* [x]
-           (flatteno '[[a b] c] x))
-         '(([[a b] c]) ([a b] (c)) ([a b] c) ([a b] c ())
-           (a (b) (c)) (a (b) c) (a (b) c ()) (a b (c))
-           (a b () (c)) (a b c) (a b c ()) (a b () c)
-           (a b () c ())))))
+#_(deftest test-flatteno
+  (is (= (set (run* [x]
+                    (flatteno '[[a b] c] x)))
+         (set '(([[a b] c]) ([a b] (c)) ([a b] c) ([a b] c ())
+                (a (b) (c)) (a (b) c) (a (b) c ()) (a b (c))
+                (a b () (c)) (a b c) (a b c ()) (a b () c)
+                (a b () c ()))))))
 
 ;; =============================================================================
 ;; membero
 
-(deftest membero-1
+#_(deftest membero-1
   (is (= (run* [q]
            (all
             (== q [(lvar)])
@@ -585,7 +585,7 @@
             (membero [(lvar) 'bar] q)))
          '([[foo bar]]))))
 
-(deftest membero-2
+#_(deftest membero-2
   (is (= (run* [q]
            (all
             (== q [(lvar) (lvar)])
@@ -597,7 +597,7 @@
 ;; -----------------------------------------------------------------------------
 ;; rembero
 
-(deftest rembero-1
+#_(deftest rembero-1
   (is (= (run 1 [q]
            (rembero 'b '(a b c b d) q))
          '((a c b d)))))
@@ -625,13 +625,13 @@
          '([0 0]))))
 
 (deftest test-conde-4-clauses
-  (is (= (run* [q]
-           (fresh [x y]
-             (digit-4 x)
-             (digit-4 y)
-             (== q [x y])))
-         '([0 0] [0 1] [0 2] [1 0] [0 3] [1 1] [1 2] [2 0]
-             [1 3] [2 1] [3 0] [2 2] [3 1] [2 3] [3 2] [3 3]))))
+  (is (= (set (run* [q]
+                    (fresh [x y]
+                           (digit-4 x)
+                           (digit-4 y)
+                           (== q [x y]))))
+         (set '([0 0] [0 1] [0 2] [1 0] [0 3] [1 1] [1 2] [2 0]
+                [1 3] [2 1] [3 0] [2 2] [3 1] [2 3] [3 2] [3 3])))))
 
 ;; -----------------------------------------------------------------------------
 ;; anyo
@@ -641,13 +641,13 @@
     [q s#]
     [(anyo q)]))
 
-(deftest test-anyo-1
+#_(deftest test-anyo-1
   (is (= (run 1 [q]
            (anyo s#)
            (== true q))
          (list true))))
 
-(deftest test-anyo-2
+#_(deftest test-anyo-2
   (is (= (run 5 [q]
            (anyo s#)
            (== true q))
@@ -658,14 +658,14 @@
 
 (def f1 (fresh [] f1))
 
-(deftest test-divergence-1
+#_(deftest test-divergence-1
   (is (= (run 1 [q]
            (conde
              [f1]
              [(== false false)]))
          '(_.0))))
 
-(deftest test-divergence-2
+#_(deftest test-divergence-2
   (is (= (run 1 [q]
            (conde
              [f1 (== false false)]
@@ -680,14 +680,14 @@
             [(== false false)])]
       [(== false false)])))
 
-(deftest test-divergence-3
+#_(deftest test-divergence-3
   (is (= (run 5 [q] f2)
          '(_.0 _.0 _.0 _.0 _.0))))
 
 ;; -----------------------------------------------------------------------------
 ;; conda (soft-cut)
 
-(deftest test-conda-1
+#_(deftest test-conda-1
   (is (= (run* [x]
            (conda
              [(== 'olive x) s#]
@@ -695,7 +695,7 @@
              [u#]))
          '(olive))))
 
-(deftest test-conda-2
+#_(deftest test-conda-2
   (is (= (run* [x]
            (conda
              [(== 'virgin x) u#]
@@ -704,7 +704,7 @@
              [u#]))
          '())))
 
-(deftest test-conda-3
+#_(deftest test-conda-3
   (is (= (run* [x]
            (fresh (x y)
              (== 'split x)
@@ -715,7 +715,7 @@
            (== true x))
          '())))
 
-(deftest test-conda-4
+#_(deftest test-conda-4
   (is (= (run* [x]
            (fresh (x y)
              (== 'split x)
@@ -731,7 +731,7 @@
     [(== 'pasta x) u#]
     [s#]))
 
-(deftest test-conda-5
+#_(deftest test-conda-5
   (is (= (run* [x]
            (conda
              [(not-pastao x)]
@@ -752,14 +752,14 @@
           '(tea))))
  )
 
-(deftest test-condu-2
+#_(deftest test-condu-2
   (is (= (run* [r]
            (conde
              [(teacupo r) s#]
              [(== false r) s#]))
          '(false tea cup))))
 
-(deftest test-condu-3
+#_(deftest test-condu-3
   (is (= (run* [r]
            (conda
              [(teacupo r) s#]
@@ -769,21 +769,21 @@
 ;; -----------------------------------------------------------------------------
 ;; disequality
 
-(deftest test-disequality-1
+#_(deftest test-disequality-1
   (is (= (run* [q]
            (fresh [x]
              (!= x 1)
              (== q x)))
          '((_.0 :- (!= _.0 1))))))
 
-(deftest test-disequality-2
+#_(deftest test-disequality-2
   (is (= (run* [q]
            (fresh [x]
              (== q x)
              (!= x 1)))
          '((_.0 :- (!= _.0 1))))))
 
-(deftest test-disequality-3
+#_(deftest test-disequality-3
   (is (= (run* [q]
            (fresh [x]
              (!= x 1)
@@ -791,7 +791,7 @@
              (== q x)))
          ())))
 
-(deftest test-disequality-4
+#_(deftest test-disequality-4
   (is (= (run* [q]
            (fresh [x]
              (== x 1)
@@ -799,7 +799,7 @@
              (== q x)))
          ())))
 
-(deftest test-disequality-5
+#_(deftest test-disequality-5
   (is (= (run* [q]
            (fresh [x y]
              (!= x y)
@@ -808,7 +808,7 @@
              (== q x)))
          ())))
 
-(deftest test-disequality-6
+#_(deftest test-disequality-6
   (is (= (run* [q]
            (fresh [x y]
              (== x 1)
@@ -817,7 +817,7 @@
              (== q x)))
          ())))
 
-(deftest test-disequality-7
+#_(deftest test-disequality-7
   (is (= (run* [q]
            (fresh [x y]
              (== x 1)
@@ -826,7 +826,7 @@
              (== q x)))
          '(1))))
 
-(deftest test-disequality-8
+#_(deftest test-disequality-8
   (is (= (run* [q]
            (fresh [x y]
              (!= [x 2] [y 1])
@@ -835,7 +835,7 @@
              (== q [x y])))
          '([1 3]))))
 
-(deftest test-disequality-9
+#_(deftest test-disequality-9
   (is (= (run* [q]
            (fresh [x y]
              (== x 1)
@@ -844,7 +844,7 @@
              (== q [x y])))
          '([1 3]))))
 
-(deftest test-disequality-10
+#_(deftest test-disequality-10
   (is (= (run* [q]
            (fresh [x y]
              (!= [x 2] [1 y])
@@ -853,7 +853,7 @@
              (== q [x y])))
          ())))
 
-(deftest test-disequality-11
+#_(deftest test-disequality-11
   (is (= (run* [q]
            (fresh [x y]
              (== x 1)
@@ -862,7 +862,7 @@
              (== q [x y])))
          ())))
 
-(deftest test-disequality-12
+#_(deftest test-disequality-12
   (is (= (run* [q]
            (fresh [x y z]
              (!= x y)
@@ -871,7 +871,7 @@
              (== q x)))
          ())))
 
-(deftest test-disequality-13
+#_(deftest test-disequality-13
   (is (= (run* [q]
            (fresh [x y z]
              (== y z)
@@ -880,7 +880,7 @@
              (== q x)))
          ())))
 
-(deftest test-disequality-14
+#_(deftest test-disequality-14
   (is (= (run* [q]
            (fresh [x y z]
              (== z y)
@@ -889,7 +889,7 @@
              (== q x)))
          ())))
 
-(deftest test-disequality-15
+#_(deftest test-disequality-15
   (is (= (run* [q]
            (fresh [x y]
              (== q [x y])
@@ -913,7 +913,7 @@
          (arco x z)
          (patho z y))])))
 
-(deftest test-tabled-1
+#_(deftest test-tabled-1
   (is (= (run* [q] (patho :a q))
          '(:b :a :d))))
 
@@ -935,7 +935,7 @@
          (arco-2 x z)
          (patho-2 z y))])))
 
-(deftest test-tabled-2
+#_(deftest test-tabled-2
   (let [r (set (run* [q] (patho-2 1 q)))]
     (is (and (= (count r) 4)
              (= r #{2 3 4 5})))))
@@ -962,7 +962,7 @@
 (defrel fun p)
 (fact fun 'Lucy)
 
-(deftest test-rel-1
+#_(deftest test-rel-1
   (is (= (run* [q]
            (fresh [x y]
              (likes x y)
@@ -972,7 +972,7 @@
 
 (retraction likes 'Bob 'Mary)
 
-(deftest test-rel-retract
+#_(deftest test-rel-retract
   (is (= (run* [q]
            (fresh [x y]
              (likes x y)
@@ -982,7 +982,7 @@
 (defrel rel1 ^:index a)
 (fact rel1 [1 2])
 
-(deftest test-rel-logic-29
+#_(deftest test-rel-logic-29
   (is (= (run* [q]
            (fresh [a]
              (rel1 [q a])
@@ -992,32 +992,32 @@
 ;; -----------------------------------------------------------------------------
 ;; nil in collection
 
-(deftest test-nil-in-coll-1
+#_(deftest test-nil-in-coll-1
   (is (= (run* [q]
            (== q [nil]))
          '([nil]))))
 
-(deftest test-nil-in-coll-2
+#_(deftest test-nil-in-coll-2
   (is (= (run* [q]
            (== q [1 nil]))
          '([1 nil]))))
 
-(deftest test-nil-in-coll-3
+#_(deftest test-nil-in-coll-3
   (is (= (run* [q]
            (== q [nil 1]))
          '([nil 1]))))
 
-(deftest test-nil-in-coll-4
+#_(deftest test-nil-in-coll-4
   (is (= (run* [q]
            (== q '(nil)))
          '((nil)))))
 
-(deftest test-nil-in-coll-5
+#_(deftest test-nil-in-coll-5
   (is (= (run* [q]
            (== q {:foo nil}))
          '({:foo nil}))))
 
-(deftest test-nil-in-coll-6
+#_(deftest test-nil-in-coll-6
   (is (= (run* [q]
            (== q {nil :foo}))
          '({nil :foo}))))
@@ -1106,7 +1106,7 @@
   ([_ [head . tail]]
      (membero x tail)))
 
-(deftest test-metadata-defne
+#_(deftest test-metadata-defne
   (is (= (-> #'dummy meta :tabled)
          true))
   (is (= (-> #'dummy meta :doc)
@@ -1118,7 +1118,7 @@
           ([[head . tail]]
              (locals-membero x tail))))
 
-(deftest test-matche-with-locals
+#_(deftest test-matche-with-locals
   (is (= [true] (run* [q]
                       (locals-membero 'foo  [1 2 3 4 5 'foo])
                       (== q true))))
@@ -1144,7 +1144,7 @@
     ([zero])
     ([(s y)] (natural-number y))))
 
-(deftest test-matche-with-expr
+#_(deftest test-matche-with-expr
   (is (= (run* [q] (natural-number one))
          '(_.0 _.0))))
 
@@ -1162,7 +1162,7 @@
 ;; -----------------------------------------------------------------------------
 ;; Tickets
 
-(deftest test-31-unifier-associative
+#_(deftest test-31-unifier-associative
   (is (= (binding [*reify-vars* false]
            (unifier '{:a ?x} '{:a ?y} '{:a 5}))
          {:a 5}))
@@ -1170,12 +1170,12 @@
            (unifier '{:a ?x} '{:a 5} '{:a ?y}))
          {:a 5})))
 
-(deftest test-34-unify-with-metadata
+#_(deftest test-34-unify-with-metadata
   (is (run* [q]
             (== q (quote ^:haz-meta-daytuhs (form form form))))
       '((^:haz-meta-daytuhs (form form form)))))
 
-(deftest test-42-multiple-run-parameters
+#_(deftest test-42-multiple-run-parameters
   (is (= '[[3 _.0 [3 _.0]]]
          (run* [x y z]
                (== z [x y])
@@ -1184,11 +1184,11 @@
 ;; =============================================================================
 ;; cKanren
 
-(deftest test-pair []
+#_(deftest test-pair []
   (is (= (pair 1 2)
          (pair 1 2))))
 
-(deftest test-keep-before-1 []
+#_(deftest test-keep-before-1 []
   (is (= (keep-before (interval 1 10) 5)
          (interval 1 4)))
   (is (= (keep-before (interval 5 10) 5)
@@ -1198,7 +1198,7 @@
   (is (= (keep-before (interval 5 10) 10)
          (interval 5 9))))
 
-(deftest test-drop-before-1 []
+#_(deftest test-drop-before-1 []
   (is (= (drop-before (interval 5 10) 4)
          (interval 5 10)))
   (is (= (drop-before (interval 1 10) 5)
@@ -1212,7 +1212,7 @@
   (is (= (drop-before (interval 5 10) 11)
          nil)))
 
-(deftest test-keep-before-2 []
+#_(deftest test-keep-before-2 []
   (is (= (keep-before 1 3)
          1))
   (is (= (keep-before 1 2)
@@ -1220,7 +1220,7 @@
   (is (= (keep-before 1 1)
          nil)))
 
-(deftest test-drop-before-2 []
+#_(deftest test-drop-before-2 []
   (is (= (drop-before 1 3)
          nil))
   (is (= (drop-before 1 2)
@@ -1230,130 +1230,130 @@
   (is (= (drop-before 1 0)
          1)))
 
-(deftest test-drop-before-mi-1 []
+#_(deftest test-drop-before-mi-1 []
   (is (= (drop-before (multi-interval 2 4) (lb 3))
          4)))
 
-(deftest test-keep-before-mi-2 []
+#_(deftest test-keep-before-mi-2 []
   (is (= (keep-before (multi-interval 2 4) (lb 3))
          2)))
 
-(deftest test-singleton-interval
+#_(deftest test-singleton-interval
   (is (= (interval 1 1) 1)))
 
-(deftest test-interval-<
+#_(deftest test-interval-<
   (is (interval-< (interval 1 10) (interval 11 20)))
   (is (interval-< 1 (interval 11 20))))
 
-(deftest test-interval->
+#_(deftest test-interval->
   (is (interval-> (interval 11 20) (interval 1 10)))
   (is (interval-> (interval 11 20) 1)))
 
-(deftest test-member?-ss-1
+#_(deftest test-member?-ss-1
   (is (true? (member? 1 1))))
 
-(deftest test-member?-ss-2
+#_(deftest test-member?-ss-2
   (is (false? (member? 1 2))))
 
-(deftest test-disjoint?-ss-1
+#_(deftest test-disjoint?-ss-1
   (is (false? (disjoint? 1 1))))
 
-(deftest test-disjoint?-ss-2
+#_(deftest test-disjoint?-ss-2
   (is (true? (disjoint? 1 2))))
 
-(deftest test-difference-ss-1
+#_(deftest test-difference-ss-1
   (is (= (difference 1 1)
          nil)))
 
-(deftest test-difference-ss-2
+#_(deftest test-difference-ss-2
   (is (= (difference 1 2)
          1)))
 
-(deftest test-intersection-ss-1
+#_(deftest test-intersection-ss-1
   (is (= (intersection 1 1)
          1)))
 
-(deftest test-intersection-ss-2
+#_(deftest test-intersection-ss-2
   (is (= (intersection 1 2)
          nil)))
 
-(deftest test-member?-is-1
+#_(deftest test-member?-is-1
   (is (true? (member? (interval 1 10) 1))))
 
-(deftest test-member?-si-1
+#_(deftest test-member?-si-1
   (is (true? (member? 1 (interval 1 10)))))
 
-(deftest test-disjoint?-is-1
+#_(deftest test-disjoint?-is-1
   (is (true? (disjoint? (interval 1 10) 11))))
 
-(deftest test-disjoint?-si-1
+#_(deftest test-disjoint?-si-1
   (is (true? (disjoint? 11 (interval 1 10)))))
 
-(deftest test-intersection-is-1
+#_(deftest test-intersection-is-1
   (is (= (intersection (interval 1 6) 1)
          1)))
 
-(deftest test-intersection-si-1
+#_(deftest test-intersection-si-1
   (is (= (intersection 1 (interval 1 6))
          1)))
 
-(deftest test-difference-is-1
+#_(deftest test-difference-is-1
   (let [mi (difference (interval 1 10) 5)]
     (is (= (first (intervals mi)) (interval 1 4)))
     (is (= (second (intervals mi)) (interval 6 10)))))
 
-(deftest test-difference-si-1
+#_(deftest test-difference-si-1
   (let [mi (difference 5 (interval 1 10))]
     (is (= (first (intervals mi)) (interval 1 4)))
     (is (= (second (intervals mi)) (interval 6 10)))))
 
-(deftest test-intersection-ii-1
+#_(deftest test-intersection-ii-1
   (is (= (intersection (interval 1 6) (interval 5 10))
          (interval 5 6))))
 
-(deftest test-intersection-ii-2
+#_(deftest test-intersection-ii-2
   (is (= (intersection (interval 5 10) (interval 1 6))
          (interval 5 6))))
 
-(deftest test-difference-ii-1
+#_(deftest test-difference-ii-1
   (is (= (difference (interval 1 6) (interval 5 10))
          (interval 1 4))))
 
-(deftest test-difference-ii-2
+#_(deftest test-difference-ii-2
   (is (= (difference (interval 1 4) (interval 5 10))
          (interval 1 4))))
 
-(deftest test-difference-ii-3
+#_(deftest test-difference-ii-3
   (is (= (difference (interval 5 10) (interval 1 4))
          (interval 5 10))))
 
-(deftest test-difference-ii-4
+#_(deftest test-difference-ii-4
   (is (= (difference (interval 1 10) (interval 1 10))
          nil)))
 
-(deftest test-difference-ii-5
+#_(deftest test-difference-ii-5
   (is (= (difference (interval 2 9) (interval 1 10))
          nil)))
 
-(deftest test-disjoint?-ii-1
+#_(deftest test-disjoint?-ii-1
   (is (false? (disjoint? (interval 1 6) (interval 5 10))))
   (is (false? (disjoint? (interval 5 10) (interval 1 6))))
   (is (true? (disjoint? (interval 1 6) (interval 10 16))))
   (is (true? (disjoint? (interval 10 16) (interval 1 6)))))
 
-(deftest test-member?-mimi-1
+#_(deftest test-member?-mimi-1
   (is (false? (member? 20 (multi-interval (interval 1 3) 5 (interval 7 10)))))
   (is (false? (member? (multi-interval (interval 1 3) 5 (interval 7 10)) 20)))
   (is (false? (member? (interval 20 30) (multi-interval (interval 1 3) 5 (interval 7 10)))))
   (is (false? (member? (multi-interval (interval 1 3) 5 (interval 7 10)) (interval 20 30)))))
 
-(deftest test-disjoint?-mimi-1
+#_(deftest test-disjoint?-mimi-1
   (is (true? (disjoint? 20 (multi-interval (interval 1 3) 5 (interval 7 10)))))
   (is (true? (disjoint? (multi-interval (interval 1 3) 5 (interval 7 10)) 20)))
   (is (true? (disjoint? (interval 20 30) (multi-interval (interval 1 3) 5 (interval 7 10)))))
   (is (true? (disjoint? (multi-interval (interval 1 3) 5 (interval 7 10)) (interval 20 30)))))
 
-(deftest test-equals-mi
+#_(deftest test-equals-mi
   (let [mi0 (multi-interval (interval 1 4) (interval 6 10))
         mi1 (multi-interval (interval 1 4) (interval 6 10))]
     (is (= mi0 mi1))))
@@ -1361,27 +1361,27 @@
 ;; -----------------------------------------------------------------------------
 ;; MultiIntervalFD Intersection
 
-(deftest test-intersection-mimi-1
+#_(deftest test-intersection-mimi-1
   (let [mi0 (multi-interval (interval 1 4) (interval 6 10))
         mi1 (multi-interval (interval 9 13) (interval 17 20))]
     (is (= (intersection mi0 mi1) (interval 9 10)))
     (is (= (intersection mi1 mi0) (interval 9 10)))))
 
-(deftest test-intersection-mimi-2
+#_(deftest test-intersection-mimi-2
   (let [mi0 (multi-interval (interval 1 4) (interval 6 10))]
     (is (= (intersection mi0 7) 7))
     (is (= (intersection 7 mi0) 7))))
 
 ;; |-----| 
 ;;   |-----|
-(deftest test-intersection-mimi-3
+#_(deftest test-intersection-mimi-3
   (let [mi0 (multi-interval (interval 1 4) (interval 7 10))]
     (is (= (intersection mi0 (interval 3 8))
            (multi-interval (interval 3 4) (interval 7 8))))))
 
 ;; |-----|
 ;;  |---|
-(deftest test-intersection-mimi-4
+#_(deftest test-intersection-mimi-4
   (let [mi0 (multi-interval (interval 1 4) (interval 7 10))
         mi1 (multi-interval (interval 2 3) (interval 6 9))]
     (is (= (intersection mi0 mi1)
@@ -1389,7 +1389,7 @@
 
 ;;   |-----|
 ;; |-----|
-(deftest test-intersection-mimi-5
+#_(deftest test-intersection-mimi-5
   (let [mi0 (multi-interval (interval 4 8) (interval 12 16))
         mi1 (multi-interval (interval 1 5) (interval 7 15))]
     (is (= (intersection mi0 mi1)
@@ -1397,7 +1397,7 @@
 
 ;;  |---|
 ;; |-----|
-(deftest test-intersection-mimi-6
+#_(deftest test-intersection-mimi-6
   (let [mi0 (multi-interval (interval 1 3) (interval 5 6) (interval 8 10))
         mi1 (multi-interval (interval 1 3) (interval 4 7) (interval 8 10))]
     (is (= (intersection mi0 mi1)
@@ -1405,14 +1405,14 @@
 
 ;; |---|  |---|
 ;; |-------|
-(deftest test-intersection-mimi-7
+#_(deftest test-intersection-mimi-7
   (let [mi0 (multi-interval (interval 1 4) (interval 7 10))]
     (is (= (intersection mi0 (interval 1 8))
            (multi-interval (interval 1 4) (interval 7 8))))))
 
 ;; |--------| |--|
 ;; |---|  |-------|
-(deftest test-intersection-mimi-8
+#_(deftest test-intersection-mimi-8
   (let [mi0 (multi-interval (interval 1 7) (interval 9 10))
         mi1 (multi-interval (interval 1 3) (interval 6 11))]
     (is (= (intersection mi0 mi1)
@@ -1423,7 +1423,7 @@
 
 ;; |---| |---|
 ;;         |---| |---|
-(deftest test-difference-mimi-1
+#_(deftest test-difference-mimi-1
   (let [mi0 (multi-interval (interval 1 4) (interval 6 10))
         mi1 (multi-interval (interval 9 13) (interval 17 20))]
     (is (= (difference mi0 mi1)
@@ -1431,14 +1431,14 @@
 
 ;; |---|  |---|
 ;;         N      
-(deftest test-difference-mis-1
+#_(deftest test-difference-mis-1
   (let [mi0 (multi-interval (interval 1 4) (interval 7 10))]
     (is (= (difference mi0 8)
            (multi-interval (interval 1 4) 7 (interval 9 10))))))
 
 ;;       N
 ;; |---|   |---|
-(deftest test-difference-smi-2
+#_(deftest test-difference-smi-2
   (let [mi0 (multi-interval (interval 1 4) (interval 6 10))]
     (is (= (difference 5 mi0) 5))))
 
@@ -1447,7 +1447,7 @@
 ;;
 ;;   |-------|
 ;; |---|   |---|
-(deftest test-difference-mii-1
+#_(deftest test-difference-mii-1
   (let [mi0 (multi-interval (interval 1 4) (interval 7 10))]
     (is (= (difference mi0 (interval 3 8))
            (multi-interval (interval 1 2) (interval 9 10))))
@@ -1456,14 +1456,14 @@
 
 ;; |---|  |---|
 ;; |-------| |----|
-(deftest test-difference-mimi-2
+#_(deftest test-difference-mimi-2
   (let [mi0 (multi-interval (interval 1 4) (interval 7 10))
         mi1 (multi-interval (interval 1 8) (interval 10 13))]
     (is (= (difference mi0 mi1) 9))))
 
 ;;  |----| |-------|
 ;; |----|    |---|
-(deftest test-difference-mimi-3
+#_(deftest test-difference-mimi-3
   (let [mi0 (multi-interval (interval 3 6) (interval 9 15))
         mi1 (multi-interval (interval 1 4) (interval 10 12))]
     (is (= (difference mi0 mi1)
@@ -1471,28 +1471,28 @@
 
 ;;   |---|     |---|
 ;; |-----| |-|
-(deftest test-difference-mimi-4
+#_(deftest test-difference-mimi-4
   (let [mi0 (multi-interval (interval 3 6) (interval 15 20))
         mi1 (multi-interval (interval 1 6) (interval 10 13))]
     (is (= (difference mi0 mi1)
            (interval 15 20)))))
 
-(deftest test-fd-1
+#_(deftest test-fd-1
   (let [d (domain 1 2 3)]
     (is (= (lb d) 1))
     (is (= (ub d) 3))))
 
-(deftest test-normalize-intervals-1
+#_(deftest test-normalize-intervals-1
   (let [d (domain 1 2 3)]
     (is (= (normalize-intervals (intervals d))
            [(interval 1 3)]))))
 
-(deftest test-normalize-intervals-2
+#_(deftest test-normalize-intervals-2
   (let [d (multi-interval (interval 1 4) 5 (interval 6 10))]
     (is (= (normalize-intervals (intervals d))
            [(interval 1 10)]))))
 
-(deftest test-unify-interval-and-number-1
+#_(deftest test-unify-interval-and-number-1
    (is (= (run* [q]
             (== q (interval 1 10))
             (== q 1))
@@ -1502,7 +1502,7 @@
             (== q (interval 1 10)))
           '(1))))
 
-(deftest test-unify-interval-and-number-2
+#_(deftest test-unify-interval-and-number-2
   (is (= (run* [q]
            (== q (interval 1 10))
            (== q 11))
@@ -1512,7 +1512,7 @@
            (== q (interval 1 10)))
          '())))
 
- (deftest test-unify-many-intervals-1
+#_(deftest test-unify-many-intervals-1
    (is (= (run* [q]
             (== q (interval 1 100))
             (== q (interval 30 60))
@@ -1526,34 +1526,34 @@
             (== q 56))
           '())))
 
-(deftest test-process-dom-1
+#_(deftest test-process-dom-1
   (let [x (lvar 'x)
         s ((process-dom x 1) empty-s)]
     (is (= (walk s x) 1))))
 
-(deftest test-process-dom-2
+#_(deftest test-process-dom-2
   (let [x (lvar 'x)
         s ((process-dom x (interval 1 10)) empty-s)]
     (is (= (walk s x) (interval 1 10)))))
 
-(deftest test-process-dom-3
+#_(deftest test-process-dom-3
   (let [x (lvar 'x)
         s (ext-no-check empty-s x (interval 1 10))
         s ((process-dom x 1) s)]
     (is (= (walk s x) 1))))
 
-(deftest test-process-dom-4
+#_(deftest test-process-dom-4
   (let [x (lvar 'x)
         s (ext-no-check empty-s x 1)
         s ((process-dom x (interval 1 10)) s)]
     (is (= (walk s x) 1))))
 
-(deftest test-domfd-1
+#_(deftest test-domfd-1
   (let [x (lvar 'x)
         s ((domfd x (interval 1 10)) empty-s)]
     (is (= (walk s x) (interval 1 10)))))
 
-(deftest test-infd-1
+#_(deftest test-infd-1
   (let [x (lvar 'x)
         y (lvar 'y)
         f ((infd x y (interval 1 10)) empty-s)
@@ -1561,7 +1561,7 @@
     (is (= (walk s x) (interval 1 10)))
     (is (= (walk s y) (interval 1 10)))))
 
-(deftest test-make-fdc-prim-1
+#_(deftest test-make-fdc-prim-1
   (let [u (lvar 'u)
         w (lvar 'w)
         c (=fdc u w)]
@@ -1572,7 +1572,7 @@
     (is (false? (runnable? c empty-s)))
     (is (true? (relevant? c empty-s)))))
 
-(deftest test-make-fdc-prim-2
+#_(deftest test-make-fdc-prim-2
   (let [u (lvar 'u)
         v 1
         w (lvar 'w)
@@ -1584,7 +1584,7 @@
     (is (false? (runnable? c empty-s)))
     (is (true? (relevant? c empty-s)))))
 
-(deftest test-make-fdc-1
+#_(deftest test-make-fdc-1
   (let [u (lvar 'u)
         v 1
         w (lvar 'w)
@@ -1596,7 +1596,7 @@
     (is (false? (runnable? c empty-s)))
     (is (true? (relevant? c empty-s)))))
 
-(deftest test-addc-1
+#_(deftest test-addc-1
   (let [u (lvar 'u)
         v 1
         w (lvar 'w)
@@ -1608,7 +1608,7 @@
     (is (= (count (:km csp)) 2))
     (is (= (count (:cm csp)) 1))))
 
-(deftest test-addc-2
+#_(deftest test-addc-2
   (let [u (lvar 'u)
         v 1
         w (lvar 'w)
@@ -1626,7 +1626,7 @@
     (is (= (count (:km cs)) 3))
     (is (= (count (:cm cs)) 2))))
 
-(deftest test-addcg
+#_(deftest test-addcg
   (let [u (lvar 'u)
         v 1
         w (lvar 'w)
@@ -1635,7 +1635,7 @@
     (is (= (count (:km (:cs s))) 2))
     (is (= (count (:cm (:cs s))) 1))))
 
-(deftest test-purge-c
+#_(deftest test-purge-c
   (let [u (lvar 'u)
         v 1
         w (lvar 'w)
@@ -1649,7 +1649,7 @@
     (is (zero? (count (:km (:cs s)))))
     (is (zero? (count (:cm (:cs s)))))))
 
-(deftest test-=fd-1
+#_(deftest test-=fd-1
   (let [x (lvar 'x)
         y (lvar 'y)
         s (-> empty-s
@@ -1661,57 +1661,57 @@
     (is (= (walk s x) (interval 5 6)))
     (is (= (walk s y) (interval 5 6)))))
 
-(deftest test-multi-interval-1
+#_(deftest test-multi-interval-1
   (let [mi (multi-interval (interval 1 3) (interval 7 10))]
     (is (= 1 (lb mi)))
     (is (= 10 (ub mi)))))
 
-(deftest test-run-constraints*
+#_(deftest test-run-constraints*
   (is (= (run-constraints* [] []) s#)))
 
-(deftest test-drop-one-1
+#_(deftest test-drop-one-1
   (is (= (:s (drop-one (domain 1 2 3)))
          #{2 3})))
 
-(deftest test-drop-one-2
+#_(deftest test-drop-one-2
   (is (= (drop-one (domain 1))
          nil)))
 
-(deftest test-drop-one-3
+#_(deftest test-drop-one-3
   (is (= (drop-one 1)
          nil)))
 
-(deftest test-drop-one-4
+#_(deftest test-drop-one-4
   (is (= (drop-one (interval 1 10))
          (interval 2 10))))
 
-(deftest test-drop-one-5
+#_(deftest test-drop-one-5
   (is (= (drop-one (interval 1 1))
          nil)))
 
-(deftest test-drop-one-6
+#_(deftest test-drop-one-6
   (is (= (drop-one (multi-interval (interval 1 10) (interval 15 20)))
          (multi-interval (interval 2 10) (interval 15 20)))))
 
-(deftest test-to-vals-1
+#_(deftest test-to-vals-1
   (is (= (to-vals 1) '(1))))
 
-(deftest test-to-vals-2
+#_(deftest test-to-vals-2
   (is (= (to-vals (domain 1 2 3)) '(1 2 3))))
 
-(deftest test-to-vals-3
+#_(deftest test-to-vals-3
   (is (= (to-vals (interval 1 10))
          '(1 2 3 4 5 6 7 8 9 10))))
 
-(deftest test-to-vals-4
+#_(deftest test-to-vals-4
   (is (= (to-vals (multi-interval (interval 1 5) (interval 7 10)))
          '(1 2 3 4 5 7 8 9 10))))
 
-(deftest test-to-vals-5
+#_(deftest test-to-vals-5
   (is (= (to-vals (multi-interval (interval 1 5) 7 (interval 9 12)))
          '(1 2 3 4 5 7 9 10 11 12))))
 
-(deftest test-map-sum-1
+#_(deftest test-map-sum-1
   (let [x (lvar 'x)
         s (unify empty-s x (interval 1 10))]
     (is (= (take 10
@@ -1720,7 +1720,7 @@
                 (to-vals (interval 1 10)))))
            '(1 2 3 4 5 6 7 8 9 10)))))
 
-(deftest test-force-ans-1
+#_(deftest test-force-ans-1
   (let [x (lvar 'x)
         s (unify empty-s x (interval 1 10))]
     (is (= (take 10
@@ -1728,7 +1728,7 @@
                (force-ans x)))
            '(1 2 3 4 5 6 7 8 9 10)))))
 
-(deftest test-force-ans-2
+#_(deftest test-force-ans-2
   (let [x (lvar 'x)
         s (unify empty-s x (interval 1 10))]
     (is (= (take 10
@@ -1736,7 +1736,7 @@
                (force-ans [x])))
            '(1 2 3 4 5 6 7 8 9 10)))))
 
-(deftest test-force-ans-3
+#_(deftest test-force-ans-3
   (let [x (lvar 'x)
         s (unify empty-s x (multi-interval (interval 1 4) (interval 6 10)))]
     (is (= (take 10
@@ -1744,7 +1744,7 @@
                (force-ans x)))
            '(1 2 3 4 6 7 8 9 10)))))
 
-(deftest test-verify-all-bound-1
+#_(deftest test-verify-all-bound-1
   (let [x (lvar 'x)
         y (lvar 'y)
         s (-> empty-s
@@ -1752,14 +1752,14 @@
               (unify y (interval 1 10)))]
     (is (nil? (verify-all-bound s [x y])))))
 
-(deftest test-verify-all-bound-2
+#_(deftest test-verify-all-bound-2
   (let [x (lvar 'x)
         y (lvar 'y)
         s (-> empty-s
               (unify x (interval 1 10)))]
     (is (thrown? Exception (verify-all-bound s [x y])))))
 
-(deftest test-enforce-constraints-1
+#_(deftest test-enforce-constraints-1
   (let [x (lvar 'x)
         s (-> empty-s
               (unify x (interval 1 3)))]
@@ -1767,7 +1767,7 @@
              (enforce-constraints x))
            '(1 2 3)))))
 
-(deftest test-reifyg-1
+#_(deftest test-reifyg-1
   (let [x (lvar 'x)
         y (lvar 'y)
         s (-> empty-s
@@ -1777,22 +1777,22 @@
     (is (= (take* ((reifyg x) s))
            '(1 2 3 4 5)))))
 
-(deftest test-unify-interval-smaller-1
+#_(deftest test-unify-interval-smaller-1
   (let [x (lvar 'x)
         s (-> empty-s
               (unify x (interval 1 10))
               (unify x (interval 2 10)))]
     (walk s x)))
 
-(deftest test-boundary-interval-1
+#_(deftest test-boundary-interval-1
   (is (difference (interval 1 10) 1)
       (interval 2 10)))
 
-(deftest test-boundary-interval-1
+#_(deftest test-boundary-interval-1
   (is (difference (interval 1 10) 10)
       (interval 1 9)))
 
-(deftest test-unify-imi-1
+#_(deftest test-unify-imi-1
   (let [x (lvar 'x)
         s (-> empty-s
               (unify x (interval 2 10))
@@ -1804,14 +1804,14 @@
 ;; -----------------------------------------------------------------------------
 ;; cKanren
 
-(deftest test-ckanren-1
+#_(deftest test-ckanren-1
   (is (= (run* [q]
            (fresh [x]
              (infd x (interval 1 3))
              (== q x)))
          '(1 2 3))))
 
-(deftest test-ckanren-2
+#_(deftest test-ckanren-2
   (is (= (run* [q]
            (fresh [x y z]
              (infd x z (interval 1 5))
@@ -1820,7 +1820,7 @@
              (== q [x y z])))
          '([1 3 4] [2 3 5] [1 4 5]))))
 
-(deftest test-ckanren-3
+#_(deftest test-ckanren-3
   (is (= (run* [q]
            (fresh [x y]
              (infd x y (interval 1 3))
@@ -1828,7 +1828,7 @@
              (== q [x y])))
          '([1 1] [2 2] [3 3]))))
 
-(deftest test-ckanren-4
+#_(deftest test-ckanren-4
   (is (true?
        (every? (fn [[x y]] (not= x y))
          (run* [q]
@@ -1837,7 +1837,7 @@
              (!=fd x y)
              (== q [x y])))))))
 
-(deftest test-ckanren-5
+#_(deftest test-ckanren-5
   (is (= (run* [q]
            (fresh [x y]
              (infd x y (interval 1 3))
@@ -1846,7 +1846,7 @@
              (== q [x y])))
          '([2 1] [2 3]))))
 
-(deftest test-ckanren-6
+#_(deftest test-ckanren-6
   (is (= (run* [q]
            (fresh [x]
              (infd x (interval 1 3))
@@ -1854,14 +1854,14 @@
              (== q x)))
          '())))
 
-(deftest test-ckanren-7
+#_(deftest test-ckanren-7
   (is (= (run* [q]
            (fresh [x]
              (infd x (interval 1 3))
              (+fd x x x)))
          '())))
 
-(deftest test-ckanren-8
+#_(deftest test-ckanren-8
   (is (= (run* [q]
            (fresh [x y]
              (infd x y (interval 1 3))
@@ -1869,7 +1869,7 @@
              (== q [x y])))
          '([1 1] [1 2] [2 2] [1 3] [3 3] [2 3]))))
 
-(deftest test-ckanren-9
+#_(deftest test-ckanren-9
   (is (= (run* [q]
            (fresh [x y]
              (infd x y (interval 1 3))
@@ -1877,13 +1877,13 @@
              (== q [x y])))
          '([1 2] [2 3] [1 3]))))
 
-(deftest test-list-sorted
+#_(deftest test-list-sorted
   (is (true? (list-sorted? < [1 2 3])))
   (is (true? (list-sorted? < [1 3 5])))
   (is (false? (list-sorted? < [1 1 3])))
   (is (false? (list-sorted? < [1 5 4 1]))))
 
-(deftest test-with-id
+#_(deftest test-with-id
   (let [x (lvar 'x)
         y (lvar 'y)
         n* (sorted-set 1 3 5)
@@ -1891,7 +1891,7 @@
     (is (= (id c) 1))
     (is (= (id (:proc c)) 1))))
 
-(deftest test-distinctfd
+#_(deftest test-distinctfd
   (is (= (run* [q]
            (fresh [x y z]
              (infd x y z (interval 1 3))
@@ -1899,7 +1899,7 @@
              (== q [x y z])))
          '([1 2 3] [1 3 2] [2 1 3] [2 3 1] [3 1 2] [3 2 1]))))
 
-(deftest test-<fd-1
+#_(deftest test-<fd-1
   (is (= (run* [q]
            (fresh [a b c]
              (infd a b c (interval 1 3))
@@ -1907,7 +1907,7 @@
              (== q [a b c])))
          '([1 2 3]))))
 
-(deftest test-<=fd-1
+#_(deftest test-<=fd-1
   (is (= (run* [q]
            (fresh [x y]
              (== x 3)
@@ -1916,7 +1916,7 @@
              (== q y)))
          '(4))))
 
-(deftest test-*fd-1
+#_(deftest test-*fd-1
   (is (= (run* [q]
            (fresh [n m]
              (infd n m (interval 1 10))
@@ -1925,7 +1925,7 @@
          '([1 2] [2 4] [3 6] [4 8] [ 5 10]))))
 
 
-(deftest test0-<fd-2
+#_(deftest test0-<fd-2
   (is (= (run* [q]
            (fresh [x y z]
              (infd x y z (interval 1 10))
@@ -1938,7 +1938,7 @@
 ;; -----------------------------------------------------------------------------
 ;; CLP(Tree)
 
-(deftest test-recover-vars []
+#_(deftest test-recover-vars []
   (let [x (lvar 'x)
         y (lvar 'y)
         s (-> empty-s
@@ -1947,7 +1947,7 @@
     (is (= (recover-vars (:l s))
            #{x y}))))
 
-(deftest test-prefix-s []
+#_(deftest test-prefix-s []
   (let [x (lvar 'x)
         y (lvar 'y)
         s empty-s
@@ -1959,7 +1959,7 @@
            (list (pair y 2) (pair x 1))))
     (is (= (-> p meta :s) sp))))
 
-(deftest test-prefix-subsumes? []
+#_(deftest test-prefix-subsumes? []
   (let [x (lvar 'x)
         y (lvar 'y)
         z (lvar 'z)
@@ -1972,7 +1972,7 @@
     (is (true? (prefix-subsumes? p (list (pair y 2)))))
     (is (false? (prefix-subsumes? p (list (pair z 3)))))))
 
-(deftest test-remc []
+#_(deftest test-remc []
   (let [x (lvar 'x)
         y (lvar 'y)
         z (lvar 'z)
@@ -1983,13 +1983,13 @@
     (is (= (:km cs) {}))
     (is (= (:cm cs) {}))))
 
-(deftest test-treec-id-1 []
+#_(deftest test-treec-id-1 []
   (let [x (lvar 'x)
         y (lvar 'y)
         c (with-id (!=c x y) 0)]
     (is (zero? (id c)))))
 
-(deftest test-tree-constraint? []
+#_(deftest test-tree-constraint? []
   (let [x (lvar 'x)
         y (lvar 'y)
         c (!=c (list (pair x 1) (pair y 2)))
@@ -1998,7 +1998,7 @@
     (is (= (into #{} (keys (:km cs)))
            #{x y}))))
 
-(deftest test-prefix-protocols []
+#_(deftest test-prefix-protocols []
   (let [x (lvar 'x)
         y (lvar 'y)
         c (!=c (list (pair x 1) (pair y 2)))
@@ -2006,20 +2006,20 @@
     (is (= (prefix c)
            (list (pair x 1))))))
 
-(deftest test-!=-1 []
+#_(deftest test-!=-1 []
   (let [x (lvar 'x)
         y (lvar 'y)
         s ((!= x y) empty-s)]
     (is (= (prefix ((:cm (:cs s)) 0)) (list (pair x y))))))
 
-(deftest test-!=-2 []
+#_(deftest test-!=-2 []
   (let [x (lvar 'x)
         y (lvar 'y)
         s ((!= x y) empty-s)
         s ((== x y) s)]
     (is (= s nil))))
 
-(deftest test-!=-3 []
+#_(deftest test-!=-3 []
   (let [x (lvar 'x)
         y (lvar 'y)
         s ((!= x y) empty-s)
@@ -2028,7 +2028,7 @@
     (is (empty? (:cm (:cs s))))
     (is (empty? (:km (:cs s))))))
 
-(deftest test-!=-4 []
+#_(deftest test-!=-4 []
   (let [x (lvar 'x)
         y (lvar 'y)
         s ((== x 1) empty-s)
@@ -2037,7 +2037,7 @@
     (is (empty? (:cm (:cs s))))
     (is (empty? (:km (:cs s))))))
 
-(deftest test-!=-5 []
+#_(deftest test-!=-5 []
   (let [x (lvar 'x)
         y (lvar 'y)
         s ((== x 1) empty-s)
@@ -2046,7 +2046,7 @@
     (is (empty? (:cm (:cs s))))
     (is (empty? (:km (:cs s))))))
 
-(deftest test-!=-6 []
+#_(deftest test-!=-6 []
   (let [x (lvar 'x)
         y (lvar 'y)
         s ((!= x 1) empty-s)]
@@ -2060,7 +2060,7 @@
         cs (addc (make-cs) c)]
     ))
 
-(deftest test-multi-constraints-1 []
+#_(deftest test-multi-constraints-1 []
   (is (= (run* [q]
            (fresh [x y z]
              (infd x y z (interval 1 3))
