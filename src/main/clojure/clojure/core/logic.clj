@@ -1870,13 +1870,11 @@
     (logic-monad. nil (fn [_] nil) true))
   (plus-step [mv mvs]
     (logic-monad. nil
-                  (fn [f]
-                    (f nil))
-                  (fn [_]
-                    (fn [c]
-                      (doseq [t (map #(fj/fork (fj/task (% c))) mvs)]
-                        (swap! tasks conj t))
-                      (mv c))))))
+                  (fn [c]
+                    (doseq [t (map #(fj/fork (fj/task (% c))) mvs)]
+                      (swap! tasks conj t))
+                    (mv c))
+                  #(logic-monad. % nil nil))))
 
 (defn logic-m [v]
   (logic-monad. v nil nil))
