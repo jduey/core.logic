@@ -1848,35 +1848,33 @@
 ;; =============================================================================
 ;; Syntax
 
-(deftype logic-monad [v mv goal]
-  clojure.lang.IDeref
-  (deref [mv]
-    (mv identity))
-
+(deftype logic-monad [s mv goal]
   clojure.lang.IFn
-  (invoke [_ c]
+  (invoke [_ [c thunk]]
     (cond
-     goal (mv (fn [v] ((goal v) c)))
-     (= ::logic-zero v) nil
-     :else (c v)))
+     goal (mv [(fn anon-c [[s t]]
+                 ((goal s) [c t]))
+               thunk])
+     :else (c [s thunk])))
 
   m/Monad
-  (do-result [_ v]
-    (logic-monad. v nil nil))
+  (do-result [_ s]
+    (logic-monad. s nil nil))
   (bind [mv goal]
     (logic-monad. nil mv goal))
 
   m/MonadZero
   (zero [_]
-    (logic-monad. ::logic-zero nil nil))
+    (logic-monad. nil (fn [_] nil) true))
   (plus-step [mv mvs]
-    (logic-monad. nil
-                  (fn [f]
-                    (f nil))
-                  (fn [_]
-                    (fn [c]
-                      (doseq [f (cons mv mvs)]
-                        (f c)))))))
+    (logic-monad. nil (fn [[c thunk]]
+                        ((reduce (fn [t mv]
+                                   (fn []
+                                     (mv [c t])))
+                                 thunk
+                                 (cons mv mvs))))
+                  (fn [s]
+                    (logic-monad. s nil nil)))))
 
 (defn logic-m [v]
   (logic-monad. v nil nil))
@@ -1970,17 +1968,22 @@
   [& goals]
   `(run false ~@goals))
 
+(defn unwind [[x thunk]]
+  (cond
+    (and x thunk) (lazy-seq
+                    (cons x (unwind (thunk))))
+    x [x]
+    thunk (unwind thunk)))
+
 (defmacro run* [[x] & goals]
-  `(let [~x (lvar '~x)
-         xs# (atom [])
-         leaf# (fn [s#]
-                 (swap! xs# conj s#))
-         solver# ((all ~@goals) empty-s)]
-     (solver# leaf#)
-     (doall
-      (->> xs#
-           (deref)
-           (map #(-reify % ~x))))))
+  `(let [leaf# (fn [[s# thunk#]]
+                 [s# thunk#])
+         ~x (lvar '~x)
+         solver# ((all ~@goals) empty-s)
+         xs# (solver# [leaf# nil])]
+     (map (fn [s#]
+            (-reify s# ~x))
+          (unwind xs#))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 
