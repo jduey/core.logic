@@ -1882,6 +1882,22 @@
 (defn logic-m [v]
   (logic-monad. v nil nil))
 
+(defn run-logic [mv]
+  (let [xs (atom [])
+        leaf #(swap! xs conj %)
+        task (fj/task ((mv empty-s) leaf))]
+     (fj/invoke thread-pool task)
+
+     ;; wait for all tasks to finish
+     (loop [ts @tasks]
+       (when (seq ts)
+         (doseq [t ts]
+           (fj/join t)
+           (swap! tasks subvec 1))
+         (recur @tasks)))
+
+     (deref xs)))
+
 (defn succeed
   "A goal that always succeeds."
   [a] (logic-m a))
@@ -1972,26 +1988,9 @@
   `(run false ~@goals))
 
 (defmacro run* [[x] & goals]
-  `(let [~x (lvar '~x)
-         xs# (atom [])
-         leaf# (fn [s#]
-                 (swap! xs# conj s#))
-         solver# ((all ~@goals) empty-s)
-         task# (fj/task (solver# leaf#))]
-     (fj/invoke thread-pool task#)
-
-     ;; wait for all tasks to finish
-     (loop [ts# @tasks]
-       (when (seq ts#)
-         (doseq [t# ts#]
-           (fj/join t#)
-           (swap! tasks subvec 1))
-         (recur @tasks)))
-
-     ;; fetch the results
-     (->> xs#
-          (deref)
-          (map #(-reify % ~x)))))
+  `(let [~x (lvar '~x)]
+     (map #(-reify % ~x)
+          (run-logic (all ~@goals)))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 
