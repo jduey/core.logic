@@ -1881,6 +1881,12 @@
 (defn logic-m [v]
   (logic-monad. v nil nil))
 
+(defn run-logic [mv]
+  (let [xs (atom [])
+        leaf #(swap! xs conj %)]
+    ((mv empty-s) leaf)
+    (deref xs)))
+
 (defn succeed
   "A goal that always succeeds."
   [a] (logic-m a))
@@ -1972,15 +1978,9 @@
 
 (defmacro run* [[x] & goals]
   `(let [~x (lvar '~x)
-         xs# (atom [])
-         leaf# (fn [s#]
-                 (swap! xs# conj s#))
-         solver# ((all ~@goals) empty-s)]
-     (solver# leaf#)
-     (doall
-      (->> xs#
-           (deref)
-           (map #(-reify % ~x))))))
+         goal# (all ~@goals)]
+     (->> (run-logic goal#)
+          (map #(-reify % ~x)))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 
