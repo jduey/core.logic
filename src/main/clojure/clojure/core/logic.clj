@@ -1848,19 +1848,6 @@
 ;; =============================================================================
 ;; Syntax
 
-(extend-type clojure.lang.PersistentVector
-  m/Monad
-  (do-result [_ v]
-    [v])
-  (bind [mv f]
-    (vec (mapcat f (remove nil? mv))))
-
-  m/MonadZero
-  (zero [_]
-    [])
-  (plus-step [mv mvs]
-    (vec (apply concat mv mvs))))
-
 (defn logic-m [v]
   (vector v))
 
