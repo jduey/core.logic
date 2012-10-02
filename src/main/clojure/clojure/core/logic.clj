@@ -1864,6 +1864,9 @@
 (defn logic-m [v]
   (vector v))
 
+(defn run-logic [mv]
+  (mv empty-s))
+
 (defn succeed
   "A goal that always succeeds."
   [a] (logic-m a))
@@ -1954,11 +1957,9 @@
   `(run false ~@goals))
 
 (defmacro run* [[x] & goals]
-  `(let [~x (lvar '~x)
-         xs# ((all ~@goals) empty-s)]
-     (doall
-      (->> xs#
-           (map #(-reify % ~x))))))
+  `(let [~x (lvar '~x)]
+     (map #(-reify % ~x)
+          (run-logic (all ~@goals)))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 
