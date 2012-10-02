@@ -1879,6 +1879,16 @@
 (defn logic-m [v]
   (logic-monad. v nil nil))
 
+(defn unwind [[x thunk]]
+  (cond
+    (and x thunk) (lazy-seq
+                    (cons x (unwind (thunk))))
+    x [x]
+    thunk (unwind thunk)))
+
+(defn run-logic [mv]
+  (unwind ((mv empty-s) [identity nil])))
+
 (defn succeed
   "A goal that always succeeds."
   [a] (logic-m a))
@@ -1968,22 +1978,10 @@
   [& goals]
   `(run false ~@goals))
 
-(defn unwind [[x thunk]]
-  (cond
-    (and x thunk) (lazy-seq
-                    (cons x (unwind (thunk))))
-    x [x]
-    thunk (unwind thunk)))
-
 (defmacro run* [[x] & goals]
-  `(let [leaf# (fn [[s# thunk#]]
-                 [s# thunk#])
-         ~x (lvar '~x)
-         solver# ((all ~@goals) empty-s)
-         xs# (solver# [leaf# nil])]
-     (map (fn [s#]
-            (-reify s# ~x))
-          (unwind xs#))))
+  `(let [~x (lvar '~x)]
+     (map #(-reify % ~x)
+          (run-logic (all ~@goals)))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 
