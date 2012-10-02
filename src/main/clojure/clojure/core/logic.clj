@@ -1977,10 +1977,9 @@
   `(run false ~@goals))
 
 (defmacro run* [[x] & goals]
-  `(let [~x (lvar '~x)
-         goal# (all ~@goals)]
-     (->> (run-logic goal#)
-          (map #(-reify % ~x)))))
+  `(let [~x (lvar '~x)]
+     (map #(-reify % ~x)
+          (run-logic (all ~@goals)))))
 
 (defmacro run-nc
   "Executes goals until a maximum of n results are found. Does not 
