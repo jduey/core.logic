@@ -1855,9 +1855,9 @@
 
   clojure.lang.IFn
   (invoke [_ c]
-    (cond
-     goal (mv (fn [v] ((goal v) c)))
-     :else (c v)))
+    (if-not goal
+        (c v)
+        (mv (fn [v] ((goal v) c)))))
 
   m/Monad
   (do-result [_ v]
