@@ -1857,7 +1857,6 @@
   (invoke [_ c]
     (cond
      goal (mv (fn [v] ((goal v) c)))
-     (= ::logic-zero v) nil
      :else (c v)))
 
   m/Monad
@@ -1868,7 +1867,7 @@
 
   m/MonadZero
   (zero [_]
-    (logic-monad. ::logic-zero nil nil))
+    (logic-monad. nil (fn [_] nil) true))
   (plus-step [mv mvs]
     (logic-monad. nil
                   (fn [f]
